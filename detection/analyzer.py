@@ -40,6 +40,9 @@ def analyse_audo(audio_path, duration=None):
 
     # Return response
     is_fake = prediction[0][0] > 0.7  # Load audio at specified sampling rate
+    # Delete the audio file after analysis
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
     return {"is_fake": is_fake, "confidence": float(prediction[0][0])}
 
 def get_audio_from_youtube_url(url):   
@@ -82,11 +85,7 @@ def get_audio_from_youtube_url(url):
         return {"error1": str(e)} # Handle HTTPError
     except pytubefix.exceptions.RegexMatchError as e:
         return {"error2": "Invalid YouTube URL. Please check the URL format."}  # Handle RegexMatchError
-    finally:
-        # Delete the audio file after analysis
-        if os.path.exists(audio_path):
-            pass
-            # os.remove(audio_path)
+
     return analysis_response
 
 def is_audio_file(self, filename):
