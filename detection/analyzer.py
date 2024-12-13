@@ -88,21 +88,22 @@ def get_audio_from_youtube_url(url):
 
     return analysis_response
 
-def is_audio_file(self, filename):
+def is_audio_file(filename):
+    print(filename)
     audio_extensions = ['.mp3', '.wav', '.flac', '.aac', '.ogg']
     return any(filename.lower().endswith(ext) for ext in audio_extensions)
 
-def is_video_file(self, filename):
+def is_video_file(filename):
     video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
     return any(filename.lower().endswith(ext) for ext in video_extensions)
 
-def extract_audio_from_video(self, video_path):
+def extract_audio_from_video(video_path):
     audio_path = video_path.rsplit('.', 1)[0] + '.flac'  # Change extension to .flac
     # Use ffmpeg to extract audio
     ffmpeg.input(video_path).output(audio_path, format='flac').run(overwrite_output=True)
     return audio_path
 
-def extract_audio_from_video_url(self, video_url):
+def extract_audio_from_video_url(video_url):
     temp_dir = 'temp'
     os.makedirs(temp_dir, exist_ok=True)
     video_path = os.path.join(temp_dir, video_url.split("/")[-1])  # Save with the original filename
@@ -122,7 +123,7 @@ def extract_audio_from_video_url(self, video_url):
 
     return audio_path
 
-def download_audio(self, url):
+def download_audio(url):
     response = requests.get(url)
     temp_dir = 'temp'
     os.makedirs(temp_dir, exist_ok=True)
