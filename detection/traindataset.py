@@ -215,7 +215,9 @@ def train_function():
     loss, accuracy = best_model.evaluate(X_test, y_test, verbose=1)
     print(f"Test Loss: {loss:.4f}")
     print(f"Test Accuracy: {accuracy * 100:.2f}%")
-
+    
+    # Save the Model
+    model.save('final_hybrid_model.h5')
 
     # Plot accuracy
     plt.plot(history.history['accuracy'], label='Training Accuracy')
@@ -234,6 +236,4 @@ def train_function():
     plt.ylabel('Loss')
     plt.legend()
     plt.show()
-
-    # Save the Model
-    model.save('final_hybrid_model.h5')
+    
