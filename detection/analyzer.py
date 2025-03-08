@@ -58,20 +58,12 @@ def get_audio_from_youtube_url(url):
 
 
     try:
-        yt = pytubefix.YouTube(url)
+        yt = pytubefix.YouTube(url, use_po_token=True,token_file="token_file.json")
         stream_url = yt.streams[0].url  # Get the URL of the video stream
-        # print(stream_url)
-        # Probe the audio streams (use it in case you need information like sample rate):
-        #probe = ffmpeg.probe(stream_url)
-        #audio_streams = next((stream for stream in probe['streams'] if stream['codec_type'] == 'audio'), None)
-        #sample_rate = audio_streams['sample_rate']
-        # Read audio into memory buffer.
-        # Get the audio using stdout pipe of ffmpeg sub-process.
-        # The audio is transcoded to PCM codec in WAC container.
         audio, err = (
             ffmpeg
             .input(stream_url)
-            .output("pipe:", format='mp3', acodec='mp3')  # Select WAV output format, and pcm_s16le auidio codec. My add ar=sample_rate
+            .output("pipe:", format='mp3', acodec='mp3')  
             .run(capture_stdout=True)
         )
         # Write the audio buffer to file for testing
