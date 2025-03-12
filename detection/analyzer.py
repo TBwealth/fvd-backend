@@ -8,6 +8,17 @@ import pytubefix
 import shutil
 import os
 import requests
+import matplotlib.pyplot as plt
+
+def get_spectrogram(y, sr=22050):
+    D = librosa.stft(y)  # STFT
+    S_db = librosa.amplitude_to_db(np.abs(D), ref=np.max)
+    return S_db, S_db.shape
+
+def get_mel_spectrogram(y, sr=22050, n_mels=128):
+    mel_spect = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=n_mels)
+    mel_spect_db = librosa.power_to_db(mel_spect, ref=np.max)
+    return mel_spect_db, mel_spect_db.shape
 
 def analyse_audo(audio_path, duration=None):
     # Load audio and extract features
@@ -16,7 +27,7 @@ def analyse_audo(audio_path, duration=None):
     # mfcc_scaled = np.mean(mfcc.T, axis=0)
 
         # Extract MFCC features
-    mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=128)
+    mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
         # Ensure consistent dimensions
     # Transpose and slice to match expected input shape
     mfcc_processed = mfcc.T  # Transpose to get (time_steps, features)
@@ -37,12 +48,56 @@ def analyse_audo(audio_path, duration=None):
     model = tf.keras.models.load_model('final_hybrid_model.h5')
     # prediction = model.predict(np.expand_dims(mfcc_reshaped, axis=0))
     prediction = model.predict(mfcc_reshaped)
-
+    print(f"Prediction Result... {prediction[0][0]}")
     # Return response
-    is_fake = prediction[0][0] > 0.7  # Load audio at specified sampling rate
+    is_fake = prediction[0][0] > 0.6  # Load audio at specified sampling rate
+    confidence_value = float(prediction[0][0])
+    
+    # Check for valid confidence value
+    if not (np.isfinite(confidence_value)):
+        confidence_value = 0.0  # Default value if confidence is not valid
+
     # Delete the audio file after analysis
     if os.path.exists(audio_path):
         os.remove(audio_path)
+
+    #  real audio
+    mel_spec_real, mel_shape_real = get_mel_spectrogram(y=y, n_mels=512)
+
+    real_spec = np.abs(librosa.stft(y))
+    real_spec = librosa.amplitude_to_db(real_spec, ref=np.max)
+
+    fake_mfccs = librosa.feature.mfcc(y=y, sr=sr)
+
+    # Plotting fake audio waveforms
+    plt.figure(figsize=(15, 10))
+    plt.subplot(2, 2, 1)
+    plt.plot(y)
+    plt.title(f"Audio waveforms")
+    plt.xlabel("Audio Input")
+    plt.ylabel("Intensity")
+    plt.grid(True)
+
+     # audio spectrogram
+    plt.subplot(2, 2, 2)
+    librosa.display.specshow(real_spec, sr=sr, x_axis="time", y_axis="log")
+    plt.colorbar(format="%+2.0f dB")
+    plt.title('Audio Input Spectogram')
+
+    # audio mel spectrogram
+    plt.subplot(2, 2, 3)
+    librosa.display.specshow(mel_spec_real, y_axis='mel')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Audio Input Mel Spectogram')
+    
+    plt.subplot(2, 2, 4)
+    librosa.display.specshow(fake_mfccs, sr=sr, x_axis="time")
+    plt.colorbar()
+    plt.title("Audio Mel-Frequency Cepstral Coefficients (MFCCs)")
+
+    plt.tight_layout()
+    plt.show()
+    # Plot spectrograms side by side
     return {"is_fake": is_fake, "confidence": float(prediction[0][0])}
 
 def get_audio_from_youtube_url(url):   
@@ -58,7 +113,7 @@ def get_audio_from_youtube_url(url):
 
 
     try:
-        yt = pytubefix.YouTube(url, use_po_token=True,token_file="token_file.json")
+        yt = pytubefix.YouTube(url, use_po_token=True,token_file="token_file.json"  )
         stream_url = yt.streams[0].url  # Get the URL of the video stream
         audio, err = (
             ffmpeg
@@ -71,7 +126,7 @@ def get_audio_from_youtube_url(url):
             f.write(audio)
 
         # Analyze the audio
-        analysis_response = analyse_audo(audio_path, duration=60)
+        analysis_response = analyse_audo(audio_path, duration=120)
 
     except HTTPError as e:
         return {"error1": str(e)} # Handle HTTPError
