@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import FileUploadParser, MultiPartParser
 from rest_framework.decorators import action
 from urllib.error import HTTPError
-from.traindataset import train_function
+# from.traindataset import train_function
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .analyzer import analyse_audo, get_audio_from_youtube_url, is_audio_file, is_video_file, extract_audio_from_video_url, download_audio
@@ -52,8 +52,9 @@ class FakeVoiceDetectionView(APIView):
     
 class train_dataset(APIView):
 
-    def get(self, request):        
-        train_function()
+    def get(self, request):   
+        pass     
+        # train_function()
 
 class analyse_youtube_video(APIView):
     @swagger_auto_schema(
